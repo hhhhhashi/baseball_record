@@ -15,12 +15,27 @@ class _GameDetailPageState extends State<GameDetailPage> {
   final TextEditingController _rbiController = TextEditingController();
   final TextEditingController _stealSuccessController = TextEditingController();
   final TextEditingController _stealAttemptController = TextEditingController();
+  DateTime? _selectedDate;
+  String? _selectedWeather;
+  final TextEditingController _numAtBatsController = TextEditingController();
+  final TextEditingController _dateController = TextEditingController();
+  final List<String> _weatherOptions = ['晴れ', '曇り', '雨', '雪', 'その他'];
+
 
   @override
   void initState() {
     super.initState();
-
     // 初期値をセット
+    if (widget.game.date.isNotEmpty) {
+      _selectedDate = DateTime.tryParse(widget.game.date);
+      if (_selectedDate != null) {
+        _dateController.text =
+            "${_selectedDate!.year}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.day.toString().padLeft(2, '0')}";
+      }
+    }
+
+    _selectedWeather = widget.game.weather.isEmpty ? null : widget.game.weather;
+    _numAtBatsController.text = widget.game.numAtBats.toString();
     _rbiController.text = widget.game.runsBattedIn.toString();
     _stealSuccessController.text = widget.game.stealSuccesses.toString();
     _stealAttemptController.text = widget.game.stealAttempts.toString();
@@ -28,11 +43,24 @@ class _GameDetailPageState extends State<GameDetailPage> {
 
   void _saveExtraStats() {
     setState(() {
-      widget.game.runsBattedIn = int.tryParse(_rbiController.text) ?? 0;
-      widget.game.stealSuccesses =
-          int.tryParse(_stealSuccessController.text) ?? 0;
-      widget.game.stealAttempts =
-          int.tryParse(_stealAttemptController.text) ?? 0;
+    widget.game.date =
+        _selectedDate != null
+            ? "${_selectedDate!.year}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.day.toString().padLeft(2, '0')}"
+            : '';
+    widget.game.weather = _selectedWeather ?? '';
+    widget.game.numAtBats =
+        int.tryParse(_numAtBatsController.text) ?? 0;
+
+    widget.game.runsBattedIn = int.tryParse(_rbiController.text) ?? 0;
+    widget.game.stealSuccesses =
+        int.tryParse(_stealSuccessController.text) ?? 0;
+    widget.game.stealAttempts =
+        int.tryParse(_stealAttemptController.text) ?? 0;
+
+    if (widget.game.atBats.length != widget.game.numAtBats) {
+      widget.game.atBats =
+          List.generate(widget.game.numAtBats, (_) => AtBat());
+    }
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -69,54 +97,96 @@ class _GameDetailPageState extends State<GameDetailPage> {
         child: Column(
           children: [
             // 試合情報
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('試合日: ${widget.game.date}'),
-                  Text('天気: ${widget.game.weather}'),
-                  Text('打席数: ${widget.game.numAtBats}'),
-                  const SizedBox(height: 16),
-
-                  /// 打点
-                  TextField(
-                    controller: _rbiController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(labelText: '打点'),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  /// 盗塁
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _stealSuccessController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              labelText: '盗塁成功数'),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('/'),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextField(
-                          controller: _stealAttemptController,
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              labelText: '盗塁試行数'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text('盗塁成績: $stealDisplay'),
-                ],
+            TextField(
+              controller: _dateController,
+              readOnly: true,
+              decoration: const InputDecoration(
+                labelText: '試合日',
+                suffixIcon: Icon(Icons.calendar_today),
               ),
+              onTap: () async {
+                final picked = await showDatePicker(
+                  context: context,
+                  initialDate: _selectedDate ?? DateTime.now(),
+                  firstDate: DateTime(2000),
+                  lastDate: DateTime(2100),
+                );
+                if (picked != null) {
+                  setState(() {
+                    _selectedDate = picked;
+                    _dateController.text =
+                        "${picked.year}/${picked.month.toString().padLeft(2, '0')}/${picked.day.toString().padLeft(2, '0')}";
+                  });
+                }
+              },
             ),
+            const SizedBox(height: 8),
+
+            DropdownButtonFormField<String>(
+              value: _selectedWeather,
+              decoration: const InputDecoration(labelText: '天気'),
+              items: _weatherOptions.map((weather) {
+                return DropdownMenuItem<String>(
+                  value: weather,
+                  child: Text(weather),
+                );
+              }).toList(),
+              onChanged: (value) {
+                setState(() {
+                  _selectedWeather = value;
+                });
+              },
+            ),
+            const SizedBox(height: 8),
+
+            TextField(
+              controller: _numAtBatsController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: '打席数'),
+              onChanged: (value) {
+                final numAtBats = int.tryParse(value) ?? 0;
+                setState(() {
+                  widget.game.numAtBats = numAtBats;
+                  widget.game.atBats =
+                      List.generate(numAtBats, (_) => AtBat());
+                });
+              },
+            ),
+            const SizedBox(height: 16),
+
+            /// 打点
+            TextField(
+              controller: _rbiController,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: '打点'),
+            ),
+            const SizedBox(height: 8),
+
+            /// 盗塁
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _stealSuccessController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        labelText: '盗塁成功数'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                const Text('/'),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _stealAttemptController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                        labelText: '盗塁試行数'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
 
             const SizedBox(height: 24),
             const Align(
@@ -163,8 +233,14 @@ class _GameDetailPageState extends State<GameDetailPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: isAllAtBatsFilled ? _registerGame : null,
-                child: const Text('試合情報を登録'),
+                onPressed: () {
+                  // 保存処理をここに書く
+                  // e.g. 保存する処理
+                  _saveExtraStats();
+                  // 一覧に戻る
+                  Navigator.pop(context, widget.game);
+                },
+                child: const Text('試合情報登録'),
               ),
             )
           ],

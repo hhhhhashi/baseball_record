@@ -1,12 +1,24 @@
 import 'package:flutter/material.dart';
 import '../models/game.dart';
-import 'game_registration_page.dart';
 import 'game_detail_page.dart';
 
-class GameListPage extends StatelessWidget {
+class GameListPage extends StatefulWidget {
   final List<Game> games;
 
   const GameListPage({super.key, required this.games});
+
+  @override
+  State<GameListPage> createState() => _GameListPageState();
+}
+
+class _GameListPageState extends State<GameListPage> {
+  late List<Game> games;
+
+  @override
+  void initState() {
+    super.initState();
+    games = widget.games;
+  }
 
   String formatSteal(Game game) {
     if (game.stealAttempts == 0) {
@@ -24,13 +36,29 @@ class GameListPage extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
+            onPressed: () async {
+              final newGame = Game(
+                date: '',
+                weather: '',
+                numAtBats: 0,
+                runsBattedIn: 0,
+                stealSuccesses: 0,
+                stealAttempts: 0,
+                atBats: [],
+              );
+
+              final resultGame = await Navigator.push<Game>(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => const GameRegistrationPage(),
+                  builder: (context) => GameDetailPage(game: newGame),
                 ),
               );
+
+              if (resultGame != null) {
+                setState(() {
+                  games.add(resultGame);
+                });
+              }
             },
           )
         ],
