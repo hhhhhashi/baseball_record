@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
-
-import ' screens/game_registration_page.dart';
+import 'screens/game_list_page.dart';
+import 'models/game.dart';
 
 void main() {
-  runApp(const BattingApp());
+  runApp(MyApp());
 }
 
-class BattingApp extends StatelessWidget {
-  const BattingApp({super.key});
+class MyApp extends StatelessWidget {
+  MyApp({super.key});
+
+  // ← グローバルで初期データを用意
+  final List<Game> games = [];
 
   @override
   Widget build(BuildContext context) {
@@ -17,7 +20,7 @@ class BattingApp extends StatelessWidget {
         primarySwatch: Colors.green,
         useMaterial3: true,
       ),
-      home: const GameRegistrationPage(),
+      home: GameListPage(games: games),
     );
   }
 }
