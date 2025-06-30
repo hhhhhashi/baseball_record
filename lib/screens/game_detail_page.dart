@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/game.dart';
 import 'at_bat_input_page.dart';
+import '../services/game_service.dart'; // 上部に追加
 
 class GameDetailPage extends StatefulWidget {
   final Game game;
@@ -41,6 +42,22 @@ class _GameDetailPageState extends State<GameDetailPage> {
     _stealAttemptController.text = widget.game.stealAttempts.toString();
   }
 
+  void _registerGame() async {
+    _saveExtraStats();
+
+    try {
+      await GameService.saveGame(widget.game); // Firestoreに保存
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('試合情報をFirestoreに保存しました！')),
+      );
+      Navigator.pop(context, widget.game);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('保存失敗: $e')),
+      );
+    }
+  }
+
   void _saveExtraStats() {
     setState(() {
     widget.game.date =
@@ -78,14 +95,6 @@ class _GameDetailPageState extends State<GameDetailPage> {
 
   bool get isAllAtBatsFilled {
     return widget.game.atBats.every((atBat) => atBat.result != null);
-  }
-
-  void _registerGame() {
-    // TODO: 保存処理を書く
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('試合情報を登録しました！')),
-    );
-    Navigator.pop(context);
   }
 
   @override
@@ -233,15 +242,22 @@ class _GameDetailPageState extends State<GameDetailPage> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // 保存処理をここに書く
-                  // e.g. 保存する処理
-                  _saveExtraStats();
-                  // 一覧に戻る
+              onPressed: () async {
+                _saveExtraStats(); // 画面上の値を反映
+                try {
+                  await GameService.saveGame(widget.game); // Firestoreに保存
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('試合情報をFirestoreに保存しました！')),
+                  );
                   Navigator.pop(context, widget.game);
-                },
-                child: const Text('試合情報登録'),
-              ),
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('保存失敗: $e')),
+                  );
+                }
+              },
+              child: const Text('試合情報登録'),
+            ),
             )
           ],
         ),

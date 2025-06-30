@@ -1,3 +1,4 @@
+import 'package:baseball_record/services/game_service.dart';
 import 'package:flutter/material.dart';
 import '../models/game.dart';
 import 'game_detail_page.dart';
@@ -17,7 +18,15 @@ class _GameListPageState extends State<GameListPage> {
   @override
   void initState() {
     super.initState();
+    _loadGames();
     games = widget.games;
+  }
+
+  void _loadGames() async {
+    final loadedGames = await GameService.fetchGames();
+    setState(() {
+      games = loadedGames;
+    });
   }
 
   String formatSteal(Game game) {

@@ -3,13 +3,23 @@ import 'screens/game_list_page.dart';
 import 'models/game.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  // 匿名ログイン
+  await FirebaseAuth.instance.signInAnonymously();
   runApp(MyApp());
+}
+
+Future<void> signInAnonymously() async {
+  final auth = FirebaseAuth.instance;
+  if (auth.currentUser == null) {
+    await auth.signInAnonymously();
+  }
 }
 
 class MyApp extends StatelessWidget {
