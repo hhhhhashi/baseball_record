@@ -73,6 +73,10 @@ class GameService {
             snapshot.docs.map((doc) => Game.fromDocument(doc)).toList());
   }
 
+  static Future<void> deleteGame(String gameId) async {
+    await FirebaseFirestore.instance.collection('games').doc(gameId).delete();
+  }
+
   
 }
 

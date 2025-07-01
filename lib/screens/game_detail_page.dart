@@ -42,22 +42,6 @@ class _GameDetailPageState extends State<GameDetailPage> {
     _stealAttemptController.text = widget.game.stealAttempts.toString();
   }
 
-  void _registerGame() async {
-    _saveExtraStats();
-
-    try {
-      await GameService.saveGame(widget.game); // Firestoreに保存
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('試合情報をFirestoreに保存しました！')),
-      );
-      Navigator.pop(context, widget.game);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('保存失敗: $e')),
-      );
-    }
-  }
-
   void _saveExtraStats() {
     setState(() {
     widget.game.date =
@@ -99,8 +83,32 @@ class _GameDetailPageState extends State<GameDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('試合詳細')),
+    var scaffold2 = Scaffold(
+      appBar: AppBar(
+        title: const Text('試合詳細'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.delete),
+            onPressed: () async {
+              final confirmed = await showDialog(
+                context: context,
+                builder: (_) => AlertDialog(
+                  title: Text('確認'),
+                  content: Text('この試合を削除しますか？'),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(context, false), child: Text('キャンセル')),
+                    TextButton(onPressed: () => Navigator.pop(context, true), child: Text('削除')),
+                  ],
+                ),
+              );
+              if (confirmed == true && widget.game.id != null) {
+                await GameService.deleteGame(widget.game.id!);
+                Navigator.pop(context); // 一覧に戻る
+              }
+            },
+          )
+        ],
+      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -263,5 +271,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
         ),
       ),
     );
+    var scaffold = scaffold2;
+    return scaffold;
   }
 }
