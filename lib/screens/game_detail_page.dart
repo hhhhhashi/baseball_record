@@ -62,8 +62,8 @@ class _GameDetailPageState extends State<GameDetailPage> {
     setState(() {
     widget.game.date =
         _selectedDate != null
-            ? "${_selectedDate!.year}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.day.toString().padLeft(2, '0')}"
-            : '';
+            ? _selectedDate!.toIso8601String()
+            : DateTime.now().toIso8601String();
     widget.game.weather = _selectedWeather ?? '';
     widget.game.numAtBats =
         int.tryParse(_numAtBatsController.text) ?? 0;

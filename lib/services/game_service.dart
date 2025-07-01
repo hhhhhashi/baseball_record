@@ -41,6 +41,41 @@ class GameService {
 
     final snapshot = await FirebaseFirestore.instance.collection('games').where('uid', isEqualTo: uid).get();
 
-    return snapshot.docs.map((doc) => Game.fromDocument(doc)).toList();
+    return snapshot.docs.map((doc){
+      final data = doc.data();
+
+      return Game(
+        id: doc.id,
+        date: data['date'] ?? '', // ISO形式の日付文字列
+        weather: data['weather'] ?? '',
+        numAtBats: data['numAtBats'] ?? 0,
+        runsBattedIn: data['runsBattedIn'] ?? 0,
+        stealSuccesses: data['stealSuccesses'] ?? 0,
+        stealAttempts: data['stealAttempts'] ?? 0,
+        atBats: (data['atBats'] as List<dynamic>).map((item) {
+          return AtBat(
+            result: item['result'],
+            dateTime: item['dateTime'],
+          );
+        }).toList(),
+      );
+    }).toList();
   }
+
+  
+  static Stream<List<Game>> streamGames() {
+    final uid = FirebaseAuth.instance.currentUser!.uid;
+    return FirebaseFirestore.instance
+        .collection('games')
+        .where('uid', isEqualTo: uid)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Game.fromDocument(doc)).toList());
+  }
+
+  
 }
+
+
+
+

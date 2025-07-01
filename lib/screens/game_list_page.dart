@@ -2,6 +2,7 @@ import 'package:baseball_record/services/game_service.dart';
 import 'package:flutter/material.dart';
 import '../models/game.dart';
 import 'game_detail_page.dart';
+import 'package:intl/intl.dart';
 
 class GameListPage extends StatefulWidget {
   final List<Game> games;
@@ -19,7 +20,6 @@ class _GameListPageState extends State<GameListPage> {
   void initState() {
     super.initState();
     _loadGames();
-    games = widget.games;
   }
 
   void _loadGames() async {
@@ -34,6 +34,15 @@ class _GameListPageState extends State<GameListPage> {
       return '0/0';
     } else {
       return '${game.stealSuccesses}/${game.stealAttempts}';
+    }
+  }
+
+  String formatDate(String dateString) {
+    try {
+      final date = DateTime.parse(dateString);
+      return DateFormat('yyyy/MM/dd').format(date); // 例: 2025/06/29
+    } catch (e) {
+      return dateString; // パース失敗時はそのまま
     }
   }
 
@@ -56,49 +65,54 @@ class _GameListPageState extends State<GameListPage> {
                 atBats: [],
               );
 
-              final resultGame = await Navigator.push<Game>(
+              await Navigator.push<Game>(
                 context,
                 MaterialPageRoute(
                   builder: (context) => GameDetailPage(game: newGame),
                 ),
               );
-
-              if (resultGame != null) {
-                setState(() {
-                  games.add(resultGame);
-                });
-              }
             },
           )
         ],
       ),
-      body: games.isEmpty
-          ? const Center(child: Text('試合が登録されていません'))
-          : ListView.builder(
-              itemCount: games.length,
-              itemBuilder: (context, index) {
-                final game = games[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(
-                      vertical: 8, horizontal: 16),
-                  child: ListTile(
-                    title: Text('${game.date} (${game.weather})'),
-                    subtitle: Text(
-                        '打席数: ${game.numAtBats}, 打点: ${game.runsBattedIn}, 盗塁: ${formatSteal(game)}'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              GameDetailPage(game: game),
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
+      body: StreamBuilder<List<Game>>(
+        stream: GameService.streamGames(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text('試合が登録されていません'));
+          }
+
+          final games = snapshot.data!;
+
+          return ListView.builder(
+            itemCount: games.length,
+            itemBuilder: (context, index) {
+              final game = games[index];
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: ListTile(
+                  title: Text('${formatDate(game.date)} (${game.weather})'),
+                  subtitle: Text(
+                      '打席数: ${game.numAtBats}, 打点: ${game.runsBattedIn}, 盗塁: ${formatSteal(game)}'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => GameDetailPage(game: game),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
