@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class Game {
   String? id;
-  String date;
+  DateTime date;
   String weather;
   int numAtBats;
   int runsBattedIn;        // 打点
@@ -24,7 +24,7 @@ class Game {
 
   Map<String, dynamic> toMap() {
     return {
-      'date': date,
+      'date': Timestamp.fromDate(date), 
       'weather': weather,
       'numAtBats': numAtBats,
       'runsBattedIn': runsBattedIn,
@@ -39,7 +39,7 @@ class Game {
     final data = doc.data() as Map<String, dynamic>;
     return Game(
       id: doc.id,
-      date: data['date'] ?? '',
+      date: (data['date'] as Timestamp).toDate(),
       weather: data['weather'] ?? '',
       numAtBats: data['numAtBats'] ?? 0,
       runsBattedIn: data['runsBattedIn'] ?? 0,

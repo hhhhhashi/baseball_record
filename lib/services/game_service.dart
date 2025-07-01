@@ -11,7 +11,7 @@ class GameService {
 
     final gameData = {
       'uid': uid,
-      'date': game.date,
+      'date': Timestamp.fromDate(game.date),
       'weather': game.weather,
       'numAtBats': game.numAtBats,
       'runsBattedIn': game.runsBattedIn,
@@ -39,14 +39,18 @@ class GameService {
     final uid = FirebaseAuth.instance.currentUser!.uid;
     if (uid == null) return [];
 
-    final snapshot = await FirebaseFirestore.instance.collection('games').where('uid', isEqualTo: uid).get();
+    final snapshot = await FirebaseFirestore.instance
+      .collection('games')
+      .where('uid', isEqualTo: uid)
+      .orderBy('date', descending: true)
+      .get();
 
     return snapshot.docs.map((doc){
       final data = doc.data();
 
       return Game(
         id: doc.id,
-        date: data['date'] ?? '', // ISO形式の日付文字列
+        date: (data['date'] as Timestamp).toDate(), 
         weather: data['weather'] ?? '',
         numAtBats: data['numAtBats'] ?? 0,
         runsBattedIn: data['runsBattedIn'] ?? 0,
@@ -68,6 +72,7 @@ class GameService {
     return FirebaseFirestore.instance
         .collection('games')
         .where('uid', isEqualTo: uid)
+        .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) =>
             snapshot.docs.map((doc) => Game.fromDocument(doc)).toList());

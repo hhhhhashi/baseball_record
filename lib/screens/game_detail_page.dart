@@ -27,8 +27,8 @@ class _GameDetailPageState extends State<GameDetailPage> {
   void initState() {
     super.initState();
     // 初期値をセット
-    if (widget.game.date.isNotEmpty) {
-      _selectedDate = DateTime.tryParse(widget.game.date);
+    if (widget.game.date != null ) {
+      _selectedDate = widget.game.date;
       if (_selectedDate != null) {
         _dateController.text =
             "${_selectedDate!.year}/${_selectedDate!.month.toString().padLeft(2, '0')}/${_selectedDate!.day.toString().padLeft(2, '0')}";
@@ -44,10 +44,7 @@ class _GameDetailPageState extends State<GameDetailPage> {
 
   void _saveExtraStats() {
     setState(() {
-    widget.game.date =
-        _selectedDate != null
-            ? _selectedDate!.toIso8601String()
-            : DateTime.now().toIso8601String();
+    widget.game.date = _selectedDate ?? DateTime.now();
     widget.game.weather = _selectedWeather ?? '';
     widget.game.numAtBats =
         int.tryParse(_numAtBatsController.text) ?? 0;

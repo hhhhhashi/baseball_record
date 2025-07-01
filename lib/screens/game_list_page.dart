@@ -37,13 +37,8 @@ class _GameListPageState extends State<GameListPage> {
     }
   }
 
-  String formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('yyyy/MM/dd').format(date); // 例: 2025/06/29
-    } catch (e) {
-      return dateString; // パース失敗時はそのまま
-    }
+  String formatDate(DateTime date) {
+    return DateFormat('yyyy/MM/dd').format(date);
   }
 
   @override
@@ -56,7 +51,7 @@ class _GameListPageState extends State<GameListPage> {
             icon: const Icon(Icons.add),
             onPressed: () async {
               final newGame = Game(
-                date: '',
+                date: DateTime.now(),
                 weather: '',
                 numAtBats: 0,
                 runsBattedIn: 0,
