@@ -24,7 +24,7 @@ class Game {
 
   Map<String, dynamic> toMap() {
     return {
-      'date': Timestamp.fromDate(date), 
+      'date': date, 
       'weather': weather,
       'numAtBats': numAtBats,
       'runsBattedIn': runsBattedIn,
