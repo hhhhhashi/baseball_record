@@ -22,7 +22,7 @@ class _StatsPageState extends State<StatsPage> {
   @override
   void initState() {
     super.initState();
-    _gamesFuture = GameService.fetchGames(); // ローカル or Firestoreから取得
+    _loadGames();
   }
 
   @override
@@ -70,16 +70,20 @@ class _StatsPageState extends State<StatsPage> {
                 /// 🔽 試合一覧へボタン追加（ここ）
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  onPressed: () async {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => const GameListPage(games: [])),
-                    );
-                  },
-                  child: const Text('試合一覧を見る'),
-                ),
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const GameListPage(games: [])),
+                  );
 
-
+                  if (result == true) {
+                    setState(() {
+                      _gamesFuture = GameService.fetchGames(); // 🔁 データを再取得して更新
+                    });
+                  }
+                },
+                child: const Text('試合一覧を見る'),
+              ),
               ],
             ),
           );
