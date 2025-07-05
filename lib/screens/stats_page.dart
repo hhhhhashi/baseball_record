@@ -1,9 +1,9 @@
+import 'package:flutter/material.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:baseball_record/models/game_stats.dart';
 import 'package:baseball_record/screens/game_list_page.dart';
-import 'package:flutter/material.dart';
 import 'package:baseball_record/services/game_service.dart';
 import 'package:baseball_record/models/game.dart';
-import 'package:fl_chart/fl_chart.dart';
 
 class StatsPage extends StatefulWidget {
   const StatsPage({super.key});
@@ -44,7 +44,7 @@ class _StatsPageState extends State<StatsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                /// 🔼 最上部に配置
+                /// 試合一覧ボタン（上部に配置）
                 Center(
                   child: ElevatedButton.icon(
                     onPressed: () async {
@@ -69,20 +69,21 @@ class _StatsPageState extends State<StatsPage> {
                 ),
 
                 const SizedBox(height: 24),
-                const Text('通算成績',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                const Text('通算成績', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
                 _buildStatsGrid(stats),
 
                 const SizedBox(height: 32),
                 _buildChartSection(
                   title: '打席内訳',
-                  chart: PieChart(stats.buildAtBatTypeChart()),
-                ),
-                const SizedBox(height: 24),
-                _buildChartSection(
-                  title: '凡打の内訳',
-                  chart: PieChart(stats.buildGroundOutTypeChart()),
+                  chart: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(height: 200, child: PieChart(stats.buildAtBatTypeChart())),
+                      const SizedBox(height: 12),
+                      _buildChartLegend(stats.atBatLegend),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -115,7 +116,7 @@ class _StatsPageState extends State<StatsPage> {
 
   Widget _statCard(String label, String value) {
     return Container(
-      width: (MediaQuery.of(context).size.width - 52) / 2, // 2列の幅
+      width: (MediaQuery.of(context).size.width - 52) / 2,
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
@@ -126,12 +127,9 @@ class _StatsPageState extends State<StatsPage> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label,
-              style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           const SizedBox(height: 2),
-          Text(value,
-              style:
-                  const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+          Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -141,11 +139,40 @@ class _StatsPageState extends State<StatsPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         const SizedBox(height: 8),
-        SizedBox(height: 200, child: chart),
+        chart,
       ],
     );
   }
+
+  Widget _buildChartLegend(Map<String, Color> items) {
+  return Wrap(
+    alignment: WrapAlignment.center, 
+    spacing: 12,
+    runSpacing: 8,
+    children: items.entries.map((entry) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: Colors.grey.shade100,
+          border: Border.all(color: Colors.grey.shade300),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 10, height: 10, color: entry.value),
+            const SizedBox(width: 6),
+            Text(
+              entry.key,
+              style: const TextStyle(fontSize: 8),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      );
+    }).toList(),
+  );
+}
 }
